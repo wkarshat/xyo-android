@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">XYO</string>
+    <string name="site_name"><u>xyo.network</u></string>
+    <string name="get_started">Get Started</string>
+    <string name="password_hint">Password</string>
+    <string name="title_node_list">Nodes</string>
+    <string name="title_node_detail">Node Detail</string>
+</resources>
