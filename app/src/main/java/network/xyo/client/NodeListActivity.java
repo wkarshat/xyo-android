@@ -12,12 +12,14 @@ import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
 import java.util.List;
 
 import network.xyo.sdk.nodes.Node;
+import network.xyo.sdk.nodes.Sentinel;
 
 /**
  * An activity representing a list of Nodes. This activity
@@ -113,8 +115,22 @@ public class NodeListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            holder.mTitle.setText(mValues.get(position).getName());
-            holder.mBody.setText(mValues.get(position).toString());
+
+            Node node = mValues.get(position);
+
+            holder.mTitle.setText(node.getName());
+            holder.mBody.setText(node.toString());
+
+            if (node instanceof Sentinel) {
+                ((Sentinel) node).setListener(new Sentinel.Listener() {
+                    @Override
+                    public void locationUpdated() {
+                        ImageView location = (ImageView) holder.itemView.findViewById(R.id.location);
+                        location.setVisibility(View.VISIBLE);
+                    }
+                });
+                ((Sentinel) node).pollLocation();
+            }
 
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(mOnClickListener);

@@ -1,6 +1,7 @@
 package network.xyo.sdk.data;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /* Types */
@@ -16,6 +17,14 @@ import java.nio.ByteBuffer;
 
 public class Simple {
     public int type = 0x1001; //unsigned short
+
+    public Simple() {
+
+    }
+
+    public Simple(ByteBuffer buffer, int offset) {
+        this.type = getUnsignedShort(buffer, offset);
+    }
 
     public static short getUnsignedByte(ByteBuffer buffer, int offset) {
         return ((short) (buffer.get(offset) & (short) 0xff));
@@ -46,6 +55,53 @@ public class Simple {
     public static int putUnsignedInt(ByteBuffer buffer, int offset, long value) {
         buffer.putInt(offset, (int) (value & 0xffffffffL));
         return offset + 4;
+    }
+
+    // ----------------------------------------------------------------
+
+    public static BigInteger getUnsigned256(ByteBuffer buffer, int offset) {
+        byte[] bytes = new byte[32];
+        buffer.get(bytes, offset, bytes.length);
+        return new BigInteger(bytes);
+    }
+
+    public static int putUnsigned256(ByteBuffer buffer, int offset, BigInteger value) {
+        byte[] bytes = value.toByteArray();
+        if (bytes.length != 32) {
+            throw new IndexOutOfBoundsException();
+        }
+        buffer.put(bytes, offset, bytes.length);
+        return offset + bytes.length;
+    }
+
+    // ----------------------------------------------------------------
+
+    public static ByteBuffer[] getBufferArray(ByteBuffer buffer, int offset) {
+        int count = getUnsignedShort(buffer, offset);
+        offset += 2;
+
+        ByteBuffer[] result = new ByteBuffer[count];
+        for (int i = 0; i < count; i++) {
+            result[i] = getBuffer(buffer, offset);
+            offset += result[i].capacity();
+        }
+        return result;
+    }
+
+    public static int putBufferArray(ByteBuffer buffer, int offset, ByteBuffer[] value) {
+        offset += putUnsignedShort(buffer, offset, value.length);
+        for (int i = 0; i < value.length; i++) {
+            offset += putBuffer(buffer, offset, value[i]);
+        }
+        return offset;
+    }
+
+    public static int getBufferArrayLength(ByteBuffer[] array) {
+        int length = 2;
+        for (int i = 0; i < array.length; i++) {
+            length += array[i].capacity();
+        }
+        return length;
     }
 
     // ----------------------------------------------------------------
@@ -114,5 +170,22 @@ public class Simple {
 
     public int toBuffer(ByteBuffer buffer, int offset) {
         return offset + putUnsignedShort(buffer, offset, type);
+    }
+
+    static public Simple fromBuffer(ByteBuffer buffer, int offset) {
+        int type = getUnsignedShort(buffer, offset);
+        switch (type) {
+            case 0x1001:
+                return new Simple(buffer, offset);
+            case 0x1002:
+                return new Proximity(buffer, offset);
+            case 0x1003:
+                return new Id(buffer, offset);
+            case 0x1004:
+                return new Location(buffer, offset);
+            case 0x1005:
+                return new Entry(buffer, offset);
+        }
+        return null;
     }
 }

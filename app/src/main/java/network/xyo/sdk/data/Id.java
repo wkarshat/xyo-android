@@ -11,6 +11,18 @@ public class Id extends Simple {
     public String domain;
     public String value;
 
+    public Id() {
+        this.type = 0x1003;
+    }
+
+    public Id(ByteBuffer buffer, int offset) {
+        super(buffer, offset);
+        offset += super.getLength();
+        this.domain = getUtf8String(buffer, offset);
+        offset += this.domain.length();
+        this.value = getUtf8String(buffer, offset);
+    }
+
     @Override
     public int toBuffer(ByteBuffer buffer, int offset) {
         offset += super.toBuffer(buffer, offset);
