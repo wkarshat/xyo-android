@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        android:font="@font/titillium_web_regular"
+        app:fontStyle="normal"
+        app:fontWeight="400"
+        app:font="@font/titillium_web_regular"/>
+    <font
+        android:fontStyle="italic"
+        android:fontWeight="400"
+        android:font="@font/titillium_web_italic"
+        app:fontStyle="italic"
+        app:fontWeight="400"
+        app:font="@font/titillium_web_italic"/>
+    <font
+        android:fontStyle="normal"
+        android:fontWeight="800"
+        android:font="@font/titillium_web_bold"
+        app:fontStyle="normal"
+        app:fontWeight="800"
+        app:font="@font/titillium_web_bold"/>
+    <font
+        android:fontStyle="italic"
+        android:fontWeight="800"
+        android:font="@font/titillium_web_bolditalic"
+        app:fontStyle="italic"
+        app:fontWeight="800"
+        app:font="@font/titillium_web_bolditalic"/>
+</font-family>

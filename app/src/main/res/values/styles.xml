@@ -6,10 +6,24 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+
+        <item name="android:fontFamily">@font/titillium</item>
+
+        <item name="android:textViewStyle">@style/TitilliumTextViewStyle</item>
+        <item name="buttonStyle">@style/TitilliumButtonStyle</item>
+
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="TitilliumTextViewStyle" parent="@android:style/Widget.TextView">
+        <item name="android:fontFamily">@font/titillium</item>
+    </style>
+
+    <style name="TitilliumButtonStyle" parent="@android:style/Widget.Button">
+        <item name="android:fontFamily">@font/titillium</item>
+    </style>
 
 </resources>

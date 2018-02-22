@@ -1,7 +1,9 @@
 package network.xyo.client;
 
+import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -124,9 +126,10 @@ public class NodeListActivity extends AppCompatActivity {
             if (node instanceof Sentinel) {
                 ((Sentinel) node).setListener(new Sentinel.Listener() {
                     @Override
-                    public void locationUpdated() {
-                        ImageView location = (ImageView) holder.itemView.findViewById(R.id.location);
-                        location.setVisibility(View.VISIBLE);
+                    public void locationUpdated(Location location) {
+                        final ImageView locationView = (ImageView) holder.itemView.findViewById(R.id.location);
+                        locationView.setAlpha(0.0f);
+                        locationView.animate().alpha(1.0f).setDuration(1000);
                     }
                 });
                 ((Sentinel) node).pollLocation();

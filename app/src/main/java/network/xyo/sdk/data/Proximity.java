@@ -23,9 +23,9 @@ public class Proximity extends Simple {
     }
 
     @Override
-    public int toBuffer(ByteBuffer buffer, int offset) {
-        offset += super.toBuffer(buffer, offset);
+    public ByteBuffer toBuffer(ByteBuffer buffer) {
+        super.toBuffer(buffer);
         byte[] bytes = range.toByteArray();
-        return offset + buffer.put(bytes, offset, bytes.length).capacity();
+        return buffer;
     }
 }

@@ -24,11 +24,11 @@ public class Id extends Simple {
     }
 
     @Override
-    public int toBuffer(ByteBuffer buffer, int offset) {
-        offset += super.toBuffer(buffer, offset);
-        offset += putUtf8String(buffer, offset, domain);
-        offset += putUtf8String(buffer, offset, value);
+    public ByteBuffer toBuffer(ByteBuffer buffer) {
+        super.toBuffer(buffer);
+        putUtf8String(buffer, domain);
+        putUtf8String(buffer, value);
 
-        return offset;
+        return buffer;
     }
 }

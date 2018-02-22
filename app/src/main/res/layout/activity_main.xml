@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="network.xyo.client.MainActivity">
+    tools:context="network.xyo.client.MainActivity"
+    android:background="@drawable/node_list_background">
 
     <ImageView
         android:id="@+id/xyoIcon"

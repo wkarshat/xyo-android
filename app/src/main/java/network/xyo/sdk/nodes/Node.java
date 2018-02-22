@@ -2,17 +2,14 @@ package network.xyo.sdk.nodes;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +29,7 @@ public class Node {
 
     private static final Map<String, Node> _nodeMap = new HashMap<>();
 
-    private ThreadPoolExecutor _threadPool;
+    protected ThreadPoolExecutor _threadPool;
 
     public static void init(Context context) {
         add(new Sentinel(context, "localhost", (short)21456, (short)25456));
@@ -97,7 +94,7 @@ public class Node {
     }
 
     private void in(byte[] data) {
-        Simple obj = Simple.fromBuffer(ByteBuffer.wrap(data), 0);
+        Simple obj = Simple.fromBuffer(ByteBuffer.wrap(data));
         if (obj instanceof Entry) {
             onEntry((Entry)obj);
         }
@@ -161,5 +158,13 @@ public class Node {
 
     public String getName() {
         return "Node";
+    }
+
+    public String getId() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(this.host);
+        builder.append(":");
+        builder.append(this.pipePort);
+        return builder.toString();
     }
 }

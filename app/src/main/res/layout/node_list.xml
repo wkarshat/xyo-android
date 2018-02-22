@@ -6,8 +6,8 @@
     android:name="network.xyo.client.NodeListFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="16dp"
-    android:layout_marginRight="16dp"
+    android:layout_marginLeft="0dp"
+    android:layout_marginRight="0dp"
     app:layoutManager="LinearLayoutManager"
     tools:context="network.xyo.client.NodeListActivity"
     tools:listitem="@layout/node_list_content"/>

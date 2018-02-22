@@ -12,6 +12,25 @@ public class Location extends Simple {
         this.type = 0x1004;
     }
 
+    public static BigInteger float2BigInt(double value, int neededPlaces) {
+        String s = String.valueOf(value);
+        int pt = s.indexOf('.');
+        int places = s.length() - pt;
+        int placesToMove = neededPlaces - places;
+        s = s.replace(".", "");
+        for (int i = 0; i < placesToMove; i++) {
+            s = s.concat("0");
+        }
+        return new BigInteger(s);
+    }
+
+    public Location(android.location.Location location) {
+        this.type = 0x1004;
+        this.latitude = float2BigInt(location.getLatitude(), 18);
+        this.longitude = float2BigInt(location.getLongitude(), 18);
+        this.altitude = float2BigInt(location.getAltitude(), 18);
+    }
+
     public Location(ByteBuffer buffer, int offset) {
         super(buffer, offset);
         offset += super.getLength();
@@ -23,13 +42,18 @@ public class Location extends Simple {
     }
 
     @Override
-    public int toBuffer(ByteBuffer buffer, int offset) {
-        offset += super.toBuffer(buffer, offset);
+    public int getLength() {
+        return 96 + super.getLength();
+    }
 
-        offset += putUnsigned256(buffer, offset, latitude);
-        offset += putUnsigned256(buffer, offset, longitude);
-        offset += putUnsigned256(buffer, offset, altitude);
+    @Override
+    public ByteBuffer toBuffer(ByteBuffer buffer) {
+        super.toBuffer(buffer);
 
-        return offset;
+        putSigned256(buffer, latitude);
+        putSigned256(buffer, longitude);
+        putSigned256(buffer, altitude);
+
+        return buffer;
     }
 }
