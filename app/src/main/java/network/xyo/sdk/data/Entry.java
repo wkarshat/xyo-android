@@ -1,10 +1,7 @@
 package network.xyo.sdk.data;
 
-import android.util.Log;
-
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.security.KeyPair;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 
@@ -97,7 +94,6 @@ public class Entry extends Simple {
         length += getBytesArrayLength(tailKeys);
         length += getBytesArrayLength(headSignatures);
         length += getBytesArrayLength(tailSignatures);
-        Log.i(TAG, "getLength: " + length);
         return length;
     }
 

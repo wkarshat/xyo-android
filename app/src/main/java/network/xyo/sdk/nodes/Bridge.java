@@ -1,13 +1,12 @@
 package network.xyo.sdk.nodes;
 
 import android.content.Context;
-import android.os.StrictMode;
+import android.util.Log;
 
 import network.xyo.sdk.data.Entry;
 
 public class Bridge extends Node {
-
-    private static final int scanFrequency = 5000;
+    private static final int scanFrequency = 60000;
 
     private Thread serverThread;
 
@@ -21,7 +20,6 @@ public class Bridge extends Node {
             public void run() {
                 while(true) {
                     try {
-                        Thread.sleep(scanFrequency);
                         _threadPool.execute(new Runnable() {
                             @Override
                             public void run() {
@@ -30,6 +28,7 @@ public class Bridge extends Node {
                                 findArchivists();
                             }
                         });
+                        Thread.sleep(scanFrequency);
                     } catch (InterruptedException ex) {
                         return;
                     }
@@ -52,7 +51,29 @@ public class Bridge extends Node {
         Entry entry = new Entry();
         entry.p2keys = getPublicKeys();
         byte[] bytes = entry.toBuffer().array();
-        this.out(sentinel, bytes);
+        this.out(sentinel, bytes, false);
+    }
+
+    @Override
+    protected boolean onEntry(Entry entry) {
+        logInfo("onEntry");
+        boolean done = false;
+        if (entry.p2signatures.size() == 0) {
+            logInfo( "P2-NOTDONE");
+            entry.p2keys = this.getPublicKeys();
+            entry.p2Sign(this);
+        } else if (entry.p1signatures.size() == 0) {
+            logInfo( "P1-DONE");
+            entry.p1keys = this.getPublicKeys();
+            entry.p1Sign(this);
+            addEntryToLedger(entry);
+            done = true;
+        } else {
+            logInfo( "IN-DONE");
+            addEntryToLedger(entry);
+            done = true;
+        }
+        return done;
     }
 
     private void findBridges() {
@@ -80,7 +101,7 @@ public class Bridge extends Node {
         entry.p2keys = getPublicKeys();
         byte[] bytes = entry.toBuffer().array();
 
-        this.out(archivist, bytes);
+        this.out(archivist, bytes, false);
     }
 
     @Override

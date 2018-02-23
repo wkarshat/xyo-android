@@ -5,8 +5,9 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.text.ParseException;
 import java.util.ArrayList;
+
+import network.xyo.sdk.Base;
 
 /* Types */
 /* =============
@@ -19,7 +20,7 @@ import java.util.ArrayList;
 ================ */
 
 
-public class Simple {
+public class Simple extends Base {
     private static String TAG = "Simple";
     public int type = 0x1001; //unsigned short
 
@@ -220,7 +221,7 @@ public class Simple {
         try {
             return fromBuffer(ByteBuffer.wrap(bytes));
         } catch (Exception ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(Simple.class.getSimpleName(), ex.getLocalizedMessage());
         }
         return null;
     }

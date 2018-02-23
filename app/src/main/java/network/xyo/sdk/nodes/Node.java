@@ -2,17 +2,15 @@ package network.xyo.sdk.nodes;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.util.Log;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,13 +26,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import network.xyo.sdk.Base;
 import network.xyo.sdk.data.Entry;
 import network.xyo.sdk.data.Simple;
 
-public class Node implements Entry.Signer {
+public class Node extends Base implements Entry.Signer {
 
-    private static String TAG = "Node";
-    private static int REQUEST_TIMEOUT = 3000;
+    private static int REQUEST_TIMEOUT = 10000;
 
     public interface Listener {
         void in(Node node, byte[] bytes);
@@ -129,7 +127,7 @@ public class Node implements Entry.Signer {
                     }
 
                 } catch (IOException ex) {
-                    Log.e(TAG, ex.getLocalizedMessage());
+                    Node.this.logError(ex.getLocalizedMessage());
                 }
             }
         });
@@ -183,7 +181,7 @@ public class Node implements Entry.Signer {
                 }
             }
         } catch (NoSuchAlgorithmException ex) {
-            Log.e(TAG, "No RSA available");
+            logError("No RSA available");
         }
     }
 
@@ -198,7 +196,7 @@ public class Node implements Entry.Signer {
             _keys.add(kpg.generateKeyPair());
             _keyUses.add(0);
         } catch (NoSuchAlgorithmException ex) {
-            Log.e(TAG, "No RSA available");
+            logError("No RSA available");
         }
     }
 
@@ -227,8 +225,8 @@ public class Node implements Entry.Signer {
         return result;
     }
 
-    protected void onEntry(Entry entry) {
-
+    protected boolean onEntry(Entry entry) {
+        return true;
     }
 
     private void stopServer() {
@@ -238,10 +236,19 @@ public class Node implements Entry.Signer {
         }
     }
 
+    private int intFromBytes(byte[] bytes) {
+        if (bytes.length != 4) {
+            throw new IndexOutOfBoundsException();
+        }
+        return (0xff & bytes[0]) * 256 * 256 * 256 + (0xff & bytes[1]) * 256 * 256 + (0xff & bytes[2]) * 256 + (0xff & bytes[3]);
+    }
+
     protected void in(Socket socket) {
+        logInfo( "in");
         try {
             long startTime = SystemClock.elapsedRealtime();
             DataInputStream dis = new DataInputStream(socket.getInputStream());
+            logInfo( "in: " + dis.available());
             while (dis.available() < 4) {
                 if (SystemClock.elapsedRealtime() > startTime + REQUEST_TIMEOUT) {
                     throw new TimeoutException("Node Timed Out");
@@ -251,7 +258,8 @@ public class Node implements Entry.Signer {
             }
             byte[] lengthBytes = new byte[4];
             dis.read(lengthBytes, 0, 4);
-            int length = (0xff & lengthBytes[0]) * 256 * 256 * 256 + (0xff & lengthBytes[1]) * 256 * 256 + (0xff & lengthBytes[2]) * 256 + (0xff & lengthBytes[3]);
+            int length = intFromBytes(lengthBytes);
+            logInfo( "in: " + dis.available());
             if (length > 4) {
                 while (dis.available() < length) {
                     if (SystemClock.elapsedRealtime() > startTime + REQUEST_TIMEOUT) {
@@ -261,7 +269,7 @@ public class Node implements Entry.Signer {
                     }
                 }
 
-                Log.i(TAG, "out-in: " + dis.available());
+                logInfo( "in: " + dis.available());
                 byte[] replyBytes = new byte[length];
                 dis.read(replyBytes, 0, length);
                 totalInCount += replyBytes.length;
@@ -271,24 +279,32 @@ public class Node implements Entry.Signer {
                 Simple simple = Simple.fromBytes(replyBytes);
                 if (simple instanceof Entry) {
                     Entry entry = (Entry)simple;
-                    onEntry(entry);
-                    this.out(socket, entry.toBytes());
+                    if (!onEntry(entry)) {
+                        logInfo( "in-continue");
+                        this.out(socket, entry.toBytes(), entry.p1signatures.size() > 0 && entry.p2signatures.size() > 0);
+                    } else {
+                        this.out(socket, entry.toBytes(), entry.p1signatures.size() > 0 && entry.p2signatures.size() > 0);
+                        logInfo( "in-close");
+                        socket.close();
+                    }
+                } else {
+                    throw new RuntimeException();
                 }
             } else {
-                Log.i(TAG, "out-socket close");
+                logInfo( "in-socket close");
                 socket.close();
             }
         } catch (TimeoutException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         } catch (IOException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         } catch (InterruptedException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         }
     }
 
-    protected void out(Socket socket, byte[] bytes) {
-        Log.i(TAG, "out: " + bytes.length);
+    protected void out(Socket socket, byte[] bytes, boolean done) {
+        logInfo( "out: " + bytes.length);
         try {
             DataOutputStream os = new DataOutputStream(socket.getOutputStream());
             os.writeInt(bytes.length);
@@ -297,25 +313,33 @@ public class Node implements Entry.Signer {
             if (this.listener != null) {
                 this.listener.out(this, bytes);
             }
-            this.in(socket);
+            if (done) {
+                logInfo( "out: done");
+                socket.close();
+            } else {
+                logInfo( "out: continue");
+                this.in(socket);
+            }
 
+        } catch (SocketException ex) {
+            logInfo("Socket Disconnected - " + ex.getLocalizedMessage());
         } catch (IOException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         }
     }
 
-    protected void out(Node target, byte[] bytes) {
+    protected void out(Node target, byte[] bytes, boolean done) {
         try {
             InetAddress[] address = InetAddress.getAllByName(host);
 
             Socket socket = new Socket(address[0], target.pipePort);
 
-            this.out(socket, bytes);
+            this.out(socket, bytes, done);
 
         } catch (UnknownHostException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         } catch (IOException ex) {
-            Log.e(TAG, ex.getLocalizedMessage());
+            logError(ex.getLocalizedMessage());
         }
     }
 

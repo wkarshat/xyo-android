@@ -12,15 +12,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import network.xyo.sdk.nodes.Node;
+
+import network.xyo.sdk.Base;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
 
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Base.init(getApplicationContext());
 
         setContentView(R.layout.activity_main);
         TextView siteLink = (TextView)findViewById(R.id.siteLink);

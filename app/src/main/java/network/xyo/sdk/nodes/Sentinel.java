@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.support.v4.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -54,6 +53,11 @@ public class Sentinel extends Node {
                 Sentinel.this.spinKeys();
             }
         });
+    }
+
+    @Override
+    protected boolean onEntry(Entry entry) {
+        return true;
     }
 
     public void pollLocation() {
