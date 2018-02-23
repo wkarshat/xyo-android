@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 /* Types */
@@ -19,18 +20,19 @@ import java.util.ArrayList;
 
 
 public class Simple {
+    private static String TAG = "Simple";
     public int type = 0x1001; //unsigned short
 
     public Simple() {
 
     }
 
-    public Simple(ByteBuffer buffer, int offset) {
-        this.type = getUnsignedShort(buffer, offset);
+    public Simple(ByteBuffer buffer) {
+        this.type = getUnsignedShort(buffer);
     }
 
-    public static short getUnsignedByte(ByteBuffer buffer, int offset) {
-        return ((short) (buffer.get(offset) & (short) 0xff));
+    public static short getUnsignedByte(ByteBuffer buffer) {
+        return ((short) (buffer.get() & (short) 0xff));
     }
 
     public static ByteBuffer putUnsignedByte(ByteBuffer buffer, int value) {
@@ -40,8 +42,8 @@ public class Simple {
 
     // ---------------------------------------------------------------
 
-    public static int getUnsignedShort(ByteBuffer buffer, int offset) {
-        return (buffer.getShort(offset) & 0xffff);
+    public static int getUnsignedShort(ByteBuffer buffer) {
+        return (buffer.getShort() & 0xffff);
     }
 
     public static ByteBuffer putUnsignedShort(ByteBuffer buffer, int value) {
@@ -51,8 +53,8 @@ public class Simple {
 
     // ---------------------------------------------------------------
 
-    public static long getUnsignedInt(ByteBuffer buffer, int offset) {
-        return ((long) buffer.getInt(offset) & 0xffffffffL);
+    public static long getUnsignedInt(ByteBuffer buffer) {
+        return ((long) buffer.getInt() & 0xffffffffL);
     }
 
     public static ByteBuffer putUnsignedInt(ByteBuffer buffer, long value) {
@@ -62,9 +64,9 @@ public class Simple {
 
     // ----------------------------------------------------------------
 
-    public static BigInteger getUnsigned256(ByteBuffer buffer, int offset) {
+    public static BigInteger getUnsigned256(ByteBuffer buffer) {
         byte[] bytes = new byte[32];
-        buffer.get(bytes, offset, bytes.length);
+        buffer.get(bytes, 0, bytes.length);
         return new BigInteger(bytes);
     }
 
@@ -82,15 +84,15 @@ public class Simple {
             paddedBytes[start + i] = bytes[i];
         }
 
-        buffer.put(paddedBytes, 0, bytes.length);
+        buffer.put(paddedBytes, 0, paddedBytes.length);
         return buffer;
     }
 
     // ----------------------------------------------------------------
 
-    public static BigInteger getSigned256(ByteBuffer buffer, int offset) {
+    public static BigInteger getSigned256(ByteBuffer buffer) {
         byte[] bytes = new byte[32];
-        buffer.get(bytes, offset, bytes.length);
+        buffer.get(bytes, 0, bytes.length);
         return new BigInteger(bytes);
     }
 
@@ -121,43 +123,41 @@ public class Simple {
 
     // ----------------------------------------------------------------
 
-    public static ArrayList<byte[]> getByteArray(ByteBuffer buffer, int offset) {
-        int count = getUnsignedShort(buffer, offset);
-        offset += 2;
+    public static ArrayList<byte[]> getBytesArray(ByteBuffer buffer) {
+        int count = getUnsignedShort(buffer);
 
-        ArrayList<byte[]> result = new ArrayList<byte[]>();
+        ArrayList<byte[]> result = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            byte[] bytes = getBytes(buffer, offset);
+            byte[] bytes = getBytes(buffer);
             result.add(bytes);
-            offset += bytes.length;
         }
         return result;
     }
 
-    public static ByteBuffer putByteArray(ByteBuffer buffer, ArrayList<byte[]> value) {
+    public static ByteBuffer putBytesArray(ByteBuffer buffer, ArrayList<byte[]> value) {
         putUnsignedShort(buffer, value.size());
+
         for (int i = 0; i < value.size(); i++) {
-            putBuffer(buffer, value.get(i));
+            putBytes(buffer, value.get(i));
         }
         return buffer;
     }
 
-    public static int getByteArrayLength(ArrayList<byte[]> array) {
+    public static int getBytesArrayLength(ArrayList<byte[]> array) {
         int length = 2;
         for (int i = 0; i < array.size(); i++) {
-            length += array.get(i).length;
+            length += getBytesLength(array.get(i));
         }
         return length;
     }
 
     // ----------------------------------------------------------------
 
-    public static String getUtf8String(ByteBuffer buffer, int offset) {
+    public static String getUtf8String(ByteBuffer buffer) {
         String result;
-        int length = getUnsignedShort(buffer, offset);
-        offset += 2;
+        int length = getUnsignedShort(buffer);
         byte[] bytes = new byte[length];
-        buffer.get(bytes, offset, length);
+        buffer.get(bytes, 0, length);
         try {
             result = new String(bytes, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
@@ -181,22 +181,30 @@ public class Simple {
 
     // ----------------------------------------------------------------
 
-    public static byte[] getBytes(ByteBuffer buffer, int offset) {
-        int length = (int)getUnsignedInt(buffer, offset);
+    public static byte[] getBytes(ByteBuffer buffer) {
+        int length = (int)getUnsignedInt(buffer);
         byte[] bytes = new byte[length];
-        buffer.get(bytes, offset + 2, length);
+        buffer.get(bytes, 0, length);
         return bytes;
     }
 
-    public static ByteBuffer putBuffer(ByteBuffer buffer, byte[] bytes) {
-        putUnsignedInt(buffer, buffer.capacity());
+    public static ByteBuffer putBytes(ByteBuffer buffer, byte[] bytes) {
+        putUnsignedInt(buffer, bytes.length);
         buffer.put(bytes, 0, bytes.length);
 
         return buffer;
     }
 
+    public static int getBytesLength(byte[] bytes) {
+        return 4 + bytes.length;
+    }
+
     public int getLength() {
         return 2;
+    }
+
+    public byte[] toBytes() {
+        return toBuffer().array();
     }
 
     public ByteBuffer toBuffer() {
@@ -208,19 +216,29 @@ public class Simple {
         return putUnsignedShort(buffer, type);
     }
 
+    static public Simple fromBytes(byte[] bytes) {
+        try {
+            return fromBuffer(ByteBuffer.wrap(bytes));
+        } catch (Exception ex) {
+            Log.e(TAG, ex.getLocalizedMessage());
+        }
+        return null;
+    }
+
     static public Simple fromBuffer(ByteBuffer buffer) {
-        int type = getUnsignedShort(buffer, 0);
+        int type = getUnsignedShort(buffer);
+        buffer.position(0);
         switch (type) {
             case 0x1001:
-                return new Simple(buffer, 0);
+                return new Simple(buffer);
             case 0x1002:
-                return new Proximity(buffer, 0);
+                return new Proximity(buffer);
             case 0x1003:
-                return new Id(buffer, 0);
+                return new Id(buffer);
             case 0x1004:
-                return new Location(buffer, 0);
+                return new Location(buffer);
             case 0x1005:
-                return new Entry(buffer, 0);
+                return new Entry(buffer);
         }
         return null;
     }

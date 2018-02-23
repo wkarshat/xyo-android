@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import network.xyo.sdk.nodes.Bridge;
 import network.xyo.sdk.nodes.Node;
 import network.xyo.sdk.nodes.Sentinel;
 
@@ -43,6 +44,8 @@ public class NodeListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_node_list);
+
+        Node.init(this);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -115,6 +118,30 @@ public class NodeListActivity extends AppCompatActivity {
             return new ViewHolder(view);
         }
 
+        private void setInCount(final View view, final Node node) {
+            mParentActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final TextView textView = view.findViewById(R.id.in);
+                    textView.setAlpha(0.0f);
+                    textView.setText("In: " + node.totalInCount);
+                    textView.animate().alpha(1.0f).setDuration(1000);
+                }
+            });
+        }
+
+        private void setOutCount(final View view, final Node node) {
+            mParentActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    final TextView textView = view.findViewById(R.id.out);
+                    textView.setAlpha(0.0f);
+                    textView.setText("Out: " + node.totalOutCount);
+                    textView.animate().alpha(1.0f).setDuration(1000);
+                }
+            });
+        }
+
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
 
@@ -123,16 +150,46 @@ public class NodeListActivity extends AppCompatActivity {
             holder.mTitle.setText(node.getName());
             holder.mBody.setText(node.toString());
 
+            this.setInCount(holder.itemView, node);
+            this.setOutCount(holder.itemView, node);
+
             if (node instanceof Sentinel) {
                 ((Sentinel) node).setListener(new Sentinel.Listener() {
                     @Override
-                    public void locationUpdated(Location location) {
-                        final ImageView locationView = (ImageView) holder.itemView.findViewById(R.id.location);
-                        locationView.setAlpha(0.0f);
-                        locationView.animate().alpha(1.0f).setDuration(1000);
+                    public void locationUpdated(final Sentinel sentinel, final Location location) {
+                        mParentActivity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                final ImageView locationView = holder.itemView.findViewById(R.id.location);
+                                locationView.setAlpha(0.0f);
+                                locationView.animate().alpha(1.0f).setDuration(1000);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void in(final Node node, final byte[] bytes) {
+                        setInCount(holder.itemView, node);
+                    }
+
+                    @Override
+                    public void out(final Node node, final byte[] bytes) {
+                        setOutCount(holder.itemView, node);
                     }
                 });
                 ((Sentinel) node).pollLocation();
+            } else if (node instanceof Bridge) {
+                ((Bridge) node).setListener(new Bridge.Listener() {
+                    @Override
+                    public void in(final Node node, final byte[] bytes) {
+                        setInCount(holder.itemView, node);
+                    }
+
+                    @Override
+                    public void out(final Node node, final byte[] bytes) {
+                        setOutCount(holder.itemView, node);
+                    }
+                });
             }
 
             holder.itemView.setTag(mValues.get(position));

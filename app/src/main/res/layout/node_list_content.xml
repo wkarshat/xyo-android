@@ -7,31 +7,33 @@
 
     <TextView
         android:id="@+id/title"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginBottom="4dp"
         android:layout_marginEnd="64dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
+        android:textAlignment="textStart"
         android:textAppearance="?attr/textAppearanceListItem"
         android:textSize="24sp"
+        tools:text="Node Title"
         app:layout_constraintBottom_toTopOf="@+id/body"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/body"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/text_margin"
-        android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="256dp"
+        android:layout_marginStart="@dimen/text_margin"
         android:layout_marginTop="4dp"
+        android:textAlignment="textStart"
         android:textAppearance="?attr/textAppearanceListItem"
-        android:textSize="10sp"
+        android:textSize="12sp"
+        tools:text="Node Body"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/title" />
 
@@ -47,4 +49,37 @@
         android:alpha="0.0"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/in"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="0dp"
+        android:layout_marginTop="0dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textSize="12sp"
+        tools:text="In: 0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title" />
+
+    <TextView
+        android:id="@+id/out"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="4dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAppearance="?attr/textAppearanceListItem"
+        android:textSize="12sp"
+        tools:text="Out: 0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/in" />
+
 </android.support.constraint.ConstraintLayout>

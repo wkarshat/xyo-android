@@ -12,6 +12,16 @@ public class Location extends Simple {
         this.type = 0x1004;
     }
 
+    public Location(ByteBuffer buffer) {
+        super(buffer);
+
+        latitude = getUnsigned256(buffer);
+
+        longitude = getUnsigned256(buffer);
+
+        altitude = getUnsigned256(buffer);
+    }
+
     public static BigInteger float2BigInt(double value, int neededPlaces) {
         String s = String.valueOf(value);
         int pt = s.indexOf('.');
@@ -29,16 +39,6 @@ public class Location extends Simple {
         this.latitude = float2BigInt(location.getLatitude(), 18);
         this.longitude = float2BigInt(location.getLongitude(), 18);
         this.altitude = float2BigInt(location.getAltitude(), 18);
-    }
-
-    public Location(ByteBuffer buffer, int offset) {
-        super(buffer, offset);
-        offset += super.getLength();
-        latitude = getUnsigned256(buffer, offset);
-        offset += 32;
-        longitude = getUnsigned256(buffer, offset);
-        offset += 32;
-        altitude = getUnsigned256(buffer, offset);
     }
 
     @Override

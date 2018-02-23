@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Node.init(this);
+
         setContentView(R.layout.activity_main);
         TextView siteLink = (TextView)findViewById(R.id.siteLink);
         siteLink.setOnClickListener(new View.OnClickListener() {

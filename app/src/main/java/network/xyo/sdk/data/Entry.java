@@ -1,10 +1,22 @@
 package network.xyo.sdk.data;
 
+import android.util.Log;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.KeyPair;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class Entry extends Simple {
+
+    private static String TAG = "Entry";
+
+    public interface Signer {
+        ArrayList<byte[]> sign(byte[] payload);
+        ArrayList<byte[]> getPublicKeys();
+    }
+
     public ArrayList<byte[]> payloads;
     public long timestamp; // UINT32
     public BigInteger nonce; // UINT256
@@ -13,61 +25,87 @@ public class Entry extends Simple {
     public ArrayList<byte[]> p2keys; // 220
     public ArrayList<byte[]> p2signatures; // 128
     public ArrayList<byte[]> p1signatures; // 128
-    public ArrayList<byte[]> headkeys; // 220
-    public ArrayList<byte[]> tailkeys; // 220
-    public ArrayList<byte[]> headsignatures; // 128
-    public ArrayList<byte[]> tailsignatures; // 128
+    public ArrayList<byte[]> headKeys; // 220
+    public ArrayList<byte[]> tailKeys; // 220
+    public ArrayList<byte[]> headSignatures; // 128
+    public ArrayList<byte[]> tailSignatures; // 128
+
+    // Total = X + 4 + 32 + 2
 
     public Entry() {
         this.type = 0x1005;
-        this.payloads = new ArrayList<byte[]>();
+        this.nonce = new BigInteger(32, new SecureRandom());
+        this.payloads = new ArrayList<>();
+        this.p1keys = new ArrayList<>();
+        this.p2keys = new ArrayList<>();
+        this.p2signatures = new ArrayList<>();
+        this.p1signatures = new ArrayList<>();
+        this.headKeys = new ArrayList<>();
+        this.tailKeys = new ArrayList<>();
+        this.headSignatures = new ArrayList<>();
+        this.tailSignatures = new ArrayList<>();
     }
 
-    public Entry(ByteBuffer buffer, int offset) {
-        super(buffer, offset);
-        offset += super.getLength();
+    public Entry(ByteBuffer buffer) {
+        super(buffer);
 
-        this.payloads = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.payloads);
+        this.payloads = getBytesArray(buffer);
 
-        this.timestamp = getUnsignedInt(buffer, offset);
-        offset += 4;
+        this.timestamp = getUnsignedInt(buffer);
 
-        this.nonce = getUnsigned256(buffer, offset);
-        offset += 32;
+        this.nonce = getUnsigned256(buffer);
 
-        this.difficulty = getUnsignedShort(buffer, offset);
-        offset += 2;
+        this.difficulty = getUnsignedShort(buffer);
 
-        this.p1keys = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.p1keys);
+        this.p1keys = getBytesArray(buffer);
 
-        this.p2keys = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.p2keys);
+        this.p2keys = getBytesArray(buffer);
 
-        this.p2signatures = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.p2signatures);
+        this.p2signatures = getBytesArray(buffer);
 
-        this.p1signatures = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.p1signatures);
+        this.p1signatures = getBytesArray(buffer);
 
-        this.headkeys = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.headkeys);
+        this.headKeys = getBytesArray(buffer);
 
-        this.tailkeys = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.tailkeys);
+        this.tailKeys = getBytesArray(buffer);
 
-        this.headsignatures = getByteArray(buffer, offset);
-        offset += getByteArrayLength(this.headsignatures);
+        this.headSignatures = getBytesArray(buffer);
 
-        this.tailsignatures = getByteArray(buffer, offset);
+        this.tailSignatures = getBytesArray(buffer);
+    }
+
+    public void p1Sign(Signer signer) {
+        p1keys = signer.getPublicKeys();
+        p1signatures = signer.sign(toBuffer().array());
+    }
+
+    public void p2Sign(Signer signer) {
+        p2keys = signer.getPublicKeys();
+        p2signatures = signer.sign(toBuffer().array());
+    }
+
+    @Override
+    public int getLength() {
+        int length = super.getLength();
+        length += 38; //static sizes
+        length += getBytesArrayLength(payloads);
+        length += getBytesArrayLength(p1keys);
+        length += getBytesArrayLength(p2keys);
+        length += getBytesArrayLength(p1signatures);
+        length += getBytesArrayLength(p2signatures);
+        length += getBytesArrayLength(headKeys);
+        length += getBytesArrayLength(tailKeys);
+        length += getBytesArrayLength(headSignatures);
+        length += getBytesArrayLength(tailSignatures);
+        Log.i(TAG, "getLength: " + length);
+        return length;
     }
 
     @Override
     public ByteBuffer toBuffer(ByteBuffer buffer) {
         super.toBuffer(buffer);
 
-        putByteArray(buffer, this.payloads);
+        putBytesArray(buffer, this.payloads);
 
         putUnsignedInt(buffer, this.timestamp);
 
@@ -75,21 +113,21 @@ public class Entry extends Simple {
 
         putUnsignedShort(buffer, this.difficulty);
 
-        putByteArray(buffer, this.p1keys);
+        putBytesArray(buffer, this.p1keys);
 
-        putByteArray(buffer, this.p2keys);
+        putBytesArray(buffer, this.p2keys);
 
-        putByteArray(buffer, this.p2signatures);
+        putBytesArray(buffer, this.p2signatures);
 
-        putByteArray(buffer, this.p1signatures);
+        putBytesArray(buffer, this.p1signatures);
 
-        putByteArray(buffer, this.headkeys);
+        putBytesArray(buffer, this.headKeys);
 
-        putByteArray(buffer, this.tailkeys);
+        putBytesArray(buffer, this.tailKeys);
 
-        putByteArray(buffer, this.headsignatures);
+        putBytesArray(buffer, this.headSignatures);
 
-        putByteArray(buffer, this.tailsignatures);
+        putBytesArray(buffer, this.tailSignatures);
 
         return buffer;
     }

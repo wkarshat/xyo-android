@@ -5,16 +5,16 @@ import java.nio.ByteBuffer;
 
 
 public class Proximity extends Simple {
+    private static String TAG = "Proximity";
     public BigInteger range; //18 decimal places
 
     public Proximity() {
         this.type = 0x1002;
     }
 
-    public Proximity(ByteBuffer buffer, int offset) {
-        super(buffer, offset);
-        offset += super.getLength();
-        range = getUnsigned256(buffer, offset);
+    public Proximity(ByteBuffer buffer) {
+        super(buffer);
+        range = getUnsigned256(buffer);
     }
 
     @Override

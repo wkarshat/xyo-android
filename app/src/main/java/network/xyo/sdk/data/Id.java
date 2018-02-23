@@ -15,12 +15,12 @@ public class Id extends Simple {
         this.type = 0x1003;
     }
 
-    public Id(ByteBuffer buffer, int offset) {
-        super(buffer, offset);
-        offset += super.getLength();
-        this.domain = getUtf8String(buffer, offset);
-        offset += this.domain.length();
-        this.value = getUtf8String(buffer, offset);
+    public Id(ByteBuffer buffer) {
+        super(buffer);
+
+        this.domain = getUtf8String(buffer);
+
+        this.value = getUtf8String(buffer);
     }
 
     @Override
