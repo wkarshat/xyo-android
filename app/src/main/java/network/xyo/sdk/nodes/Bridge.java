@@ -6,7 +6,7 @@ import android.util.Log;
 import network.xyo.sdk.data.Entry;
 
 public class Bridge extends Node {
-    private static final int scanFrequency = 60000;
+    private static final int scanFrequency = 10000;
 
     private Thread serverThread;
 

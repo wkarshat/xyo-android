@@ -18,14 +18,14 @@ public class Entry extends Simple {
     public long timestamp; // UINT32
     public BigInteger nonce; // UINT256
     public int difficulty; // UINT16
-    public ArrayList<byte[]> p1keys; // 220
-    public ArrayList<byte[]> p2keys; // 220
-    public ArrayList<byte[]> p2signatures; // 128
-    public ArrayList<byte[]> p1signatures; // 128
-    public ArrayList<byte[]> headKeys; // 220
-    public ArrayList<byte[]> tailKeys; // 220
-    public ArrayList<byte[]> headSignatures; // 128
-    public ArrayList<byte[]> tailSignatures; // 128
+    public ArrayList<byte[]> p1keys; // 65
+    public ArrayList<byte[]> p2keys; // 65
+    public ArrayList<byte[]> p2signatures; // 64
+    public ArrayList<byte[]> p1signatures; // 64
+    public ArrayList<byte[]> headKeys; // 65
+    public ArrayList<byte[]> tailKeys; // 65
+    public ArrayList<byte[]> headSignatures; // 64
+    public ArrayList<byte[]> tailSignatures; // 64
 
     // Total = X + 4 + 32 + 2
 

@@ -6,17 +6,22 @@ import android.os.SystemClock;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +101,9 @@ public class Node extends Base implements Entry.Signer {
         this.pipePort = pipePort;
         this.id = host + ":" + pipePort;
         this.ledger = new ArrayList<>();
-        this.startServer();
+        if (host.compareTo("localhost") == 0) {
+            this.startServer();
+        }
         _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         this.generateInitialKeys();
     }
@@ -143,8 +150,23 @@ public class Node extends Base implements Entry.Signer {
 
     protected ArrayList<byte[]> publicKeysFromKeyPairs(KeyPair[] keyPairs) {
         ArrayList<byte[]> result = new ArrayList<>();
+
         for (int i = 0; i < keyPairs.length; i++) {
-            result.add(keyPairs[i].getPublic().getEncoded());
+            RSAPublicKey pub = (RSAPublicKey) keyPairs[i].getPublic();
+            byte[] modulus = pub.getModulus().toByteArray();
+            if (pub.getPublicExponent().intValue() != 65537) {
+                throw new RuntimeException("Invalid Exponent");
+            }
+            // if there are leading zeros, we have to pad
+            if (modulus.length < 65) {
+                byte[] paddedModulus = new byte[65];
+                int offset = 65 - modulus.length;
+                for (int j = 0; j < modulus.length; j++) {
+                    paddedModulus[j + offset] = modulus[j];
+                }
+                modulus = paddedModulus;
+            }
+            result.add(modulus);
         }
         return result;
     }
@@ -189,6 +211,7 @@ public class Node extends Base implements Entry.Signer {
         _keys = new ArrayList<>();
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+            kpg.initialize(512, new SecureRandom());
             _keys.add(kpg.generateKeyPair());
             _keyUses.add(0);
             _keys.add(kpg.generateKeyPair());
@@ -283,8 +306,8 @@ public class Node extends Base implements Entry.Signer {
                         logInfo( "in-continue");
                         this.out(socket, entry.toBytes(), entry.p1signatures.size() > 0 && entry.p2signatures.size() > 0);
                     } else {
-                        this.out(socket, entry.toBytes(), entry.p1signatures.size() > 0 && entry.p2signatures.size() > 0);
                         logInfo( "in-close");
+                        this.out(socket, entry.toBytes(), entry.p1signatures.size() > 0 && entry.p2signatures.size() > 0);
                         socket.close();
                     }
                 } else {
@@ -323,21 +346,37 @@ public class Node extends Base implements Entry.Signer {
 
         } catch (SocketException ex) {
             logInfo("Socket Disconnected - " + ex.getLocalizedMessage());
+            try {
+                socket.close();
+            } catch (IOException ioex) {
+                logError(ioex.getLocalizedMessage());
+            }
         } catch (IOException ex) {
             logError(ex.getLocalizedMessage());
         }
     }
 
     protected void out(Node target, byte[] bytes, boolean done) {
+        InetAddress[] address = new InetAddress[0];
         try {
-            InetAddress[] address = InetAddress.getAllByName(host);
+            address = InetAddress.getAllByName(target.host);
+
+            logInfo("out-started: " + address[0]);
 
             Socket socket = new Socket(address[0], target.pipePort);
 
-            this.out(socket, bytes, done);
+            if (socket.isConnected()) {
+                logInfo("out-connected: " + address[0]);
+                this.out(socket, bytes, done);
+            } else {
+                logError("Failed to Connect to: " + address[0]);
+            }
 
         } catch (UnknownHostException ex) {
             logError(ex.getLocalizedMessage());
+        } catch (ConnectException ex){
+            logInfo("Connection Error: " + address[0]);
+            logInfo(ex.getLocalizedMessage());
         } catch (IOException ex) {
             logError(ex.getLocalizedMessage());
         }

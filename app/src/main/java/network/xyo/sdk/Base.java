@@ -35,6 +35,10 @@ public class Base {
         return (Debug.isDebuggerConnected());
     }
 
+    public void logException(Exception ex) {
+        logException(tag(), ex);
+    }
+
     //Any Handled Exceptions
     public static void logException(String module, Exception ex) {
         logException(module, ex);

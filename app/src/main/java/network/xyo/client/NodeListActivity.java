@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import network.xyo.sdk.nodes.Archivist;
 import network.xyo.sdk.nodes.Bridge;
 import network.xyo.sdk.nodes.Node;
 import network.xyo.sdk.nodes.Sentinel;
@@ -180,6 +181,18 @@ public class NodeListActivity extends AppCompatActivity {
                 ((Sentinel) node).pollLocation();
             } else if (node instanceof Bridge) {
                 ((Bridge) node).setListener(new Bridge.Listener() {
+                    @Override
+                    public void in(final Node node, final byte[] bytes) {
+                        setInCount(holder.itemView, node);
+                    }
+
+                    @Override
+                    public void out(final Node node, final byte[] bytes) {
+                        setOutCount(holder.itemView, node);
+                    }
+                });
+            } else if (node instanceof Archivist) {
+                ((Archivist) node).setListener(new Archivist.Listener() {
                     @Override
                     public void in(final Node node, final byte[] bytes) {
                         setInCount(holder.itemView, node);
