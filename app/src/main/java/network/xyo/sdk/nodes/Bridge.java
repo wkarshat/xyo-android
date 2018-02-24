@@ -1,7 +1,6 @@
 package network.xyo.sdk.nodes;
 
 import android.content.Context;
-import android.util.Log;
 
 import network.xyo.sdk.data.Entry;
 
