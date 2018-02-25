@@ -1,6 +1,5 @@
 package network.xyo.client;
 
-import android.animation.Animator;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -44,7 +43,7 @@ public class NodeListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_node_list);
+        setContentView(R.layout.node_list_activity);
 
         Node.init(this);
 
@@ -85,10 +84,10 @@ public class NodeListActivity extends AppCompatActivity {
         private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Node item = (Node) view.getTag();
+                Node node = (Node) view.getTag();
                 if (mTwoPane) {
                     Bundle arguments = new Bundle();
-                    arguments.putString(NodeDetailFragment.ARG_ITEM_ID, item.id);
+                    arguments.putString(NodeDetailFragment.NODE_NAME, node.getName());
                     NodeDetailFragment fragment = new NodeDetailFragment();
                     fragment.setArguments(arguments);
                     mParentActivity.getSupportFragmentManager().beginTransaction()
@@ -97,7 +96,7 @@ public class NodeListActivity extends AppCompatActivity {
                 } else {
                     Context context = view.getContext();
                     Intent intent = new Intent(context, NodeDetailActivity.class);
-                    intent.putExtra(NodeDetailFragment.ARG_ITEM_ID, item.id);
+                    intent.putExtra(NodeDetailFragment.NODE_NAME, node.getName());
 
                     context.startActivity(intent);
                 }
@@ -169,6 +168,11 @@ public class NodeListActivity extends AppCompatActivity {
                     }
 
                     @Override
+                    public void updated() {
+
+                    }
+
+                    @Override
                     public void in(final Node node, final byte[] bytes) {
                         setInCount(holder.itemView, node);
                     }
@@ -190,6 +194,11 @@ public class NodeListActivity extends AppCompatActivity {
                     public void out(final Node node, final byte[] bytes) {
                         setOutCount(holder.itemView, node);
                     }
+
+                    @Override
+                    public void updated() {
+
+                    }
                 });
             } else if (node instanceof Archivist) {
                 ((Archivist) node).setListener(new Archivist.Listener() {
@@ -201,6 +210,11 @@ public class NodeListActivity extends AppCompatActivity {
                     @Override
                     public void out(final Node node, final byte[] bytes) {
                         setOutCount(holder.itemView, node);
+                    }
+
+                    @Override
+                    public void updated() {
+
                     }
                 });
             }

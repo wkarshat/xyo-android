@@ -42,6 +42,7 @@ public class Node extends Base implements Entry.Signer {
     public interface Listener {
         void in(Node node, byte[] bytes);
         void out(Node node, byte[] bytes);
+        void updated();
     }
 
     private Listener listener;
@@ -78,6 +79,10 @@ public class Node extends Base implements Entry.Signer {
         return _nodeMap.get(name);
     }
 
+    public Entry getEntry(String hash) {
+        return _entryMap.get(hash);
+    }
+
     public static List<Node> get() {
         return _nodes;
     }
@@ -90,7 +95,8 @@ public class Node extends Base implements Entry.Signer {
     public long totalInCount;
     public long totalOutCount;
 
-    public ArrayList<Entry> ledger;
+    public List<Entry> ledger;
+    private final Map<String, Entry> _entryMap = new HashMap<>();
 
     private Thread serverThread;
 
@@ -101,10 +107,10 @@ public class Node extends Base implements Entry.Signer {
         this.pipePort = pipePort;
         this.id = host + ":" + pipePort;
         this.ledger = new ArrayList<>();
+        _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         if (host.compareTo("localhost") == 0) {
             this.startServer();
         }
-        _threadPool = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
         this.generateInitialKeys();
     }
 
@@ -146,6 +152,10 @@ public class Node extends Base implements Entry.Signer {
             this.signHeadAndTail(entry);
         }
         this.ledger.add(entry);
+        this._entryMap.put(String.valueOf(entry.hashCode()), entry);
+        if (this.listener != null) {
+            this.listener.updated();
+        }
     }
 
     protected ArrayList<byte[]> publicKeysFromKeyPairs(KeyPair[] keyPairs) {

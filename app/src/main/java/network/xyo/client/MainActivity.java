@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
         Base.init(getApplicationContext());
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.main_activity);
         TextView siteLink = (TextView)findViewById(R.id.siteLink);
         siteLink.setOnClickListener(new View.OnClickListener() {
             @Override

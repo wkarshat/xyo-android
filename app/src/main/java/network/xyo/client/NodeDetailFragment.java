@@ -1,13 +1,17 @@
 package network.xyo.client;
 
-import android.app.Activity;
-import android.support.design.widget.CollapsingToolbarLayout;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+
+import java.security.InvalidKeyException;
 
 import network.xyo.sdk.nodes.Node;
 
@@ -22,12 +26,12 @@ public class NodeDetailFragment extends Fragment {
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_ITEM_ID = "item_id";
+    public static final String NODE_NAME = "node_name";
 
     /**
      * The dummy content this fragment is presenting.
      */
-    private Node mItem;
+    private Node node;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -40,11 +44,13 @@ public class NodeDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
+        if (getArguments().containsKey(NodeDetailFragment.NODE_NAME)) {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = Node.get(getArguments().getString(ARG_ITEM_ID));
+            node = Node.get(getArguments().getString(NodeDetailFragment.NODE_NAME));
+        } else {
+            throw new RuntimeException();
         }
     }
 
@@ -53,10 +59,18 @@ public class NodeDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.node_detail, container, false);
 
-        // Show the dummy content as text in a TextView.
-        if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.node_detail)).setText(mItem.toString());
-        }
+        Button ledger = rootView.findViewById(R.id.ledger);
+
+        ledger.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Context context = NodeDetailFragment.this.getContext();
+                Intent intent = new Intent(context, LedgerActivity.class);
+                intent.putExtra(NODE_NAME, node.getName() );
+
+                context.startActivity(intent);
+            }
+        });
 
         return rootView;
     }

@@ -24,41 +24,44 @@ public class Simple extends Base {
     private static String TAG = "Simple";
     public int type = 0x1001; //unsigned short
 
+    public byte[] data;
+
     public Simple() {
 
     }
 
     public Simple(ByteBuffer buffer) {
-        this.type = getUnsignedShort(buffer);
+        this.data = buffer.array().clone();
+        this.type = getUnsigned16(buffer);
     }
 
-    public static short getUnsignedByte(ByteBuffer buffer) {
+    public static short getUnsigned8(ByteBuffer buffer) {
         return ((short) (buffer.get() & (short) 0xff));
     }
 
-    public static ByteBuffer putUnsignedByte(ByteBuffer buffer, int value) {
+    public static ByteBuffer putUnsigned8(ByteBuffer buffer, int value) {
         buffer.put((byte) (value & 0xff));
         return buffer;
     }
 
     // ---------------------------------------------------------------
 
-    public static int getUnsignedShort(ByteBuffer buffer) {
+    public static int getUnsigned16(ByteBuffer buffer) {
         return (buffer.getShort() & 0xffff);
     }
 
-    public static ByteBuffer putUnsignedShort(ByteBuffer buffer, int value) {
+    public static ByteBuffer putUnsigned16(ByteBuffer buffer, int value) {
         buffer.putShort((short) (value & 0xffff));
         return buffer;
     }
 
     // ---------------------------------------------------------------
 
-    public static long getUnsignedInt(ByteBuffer buffer) {
+    public static long getUnsigned32(ByteBuffer buffer) {
         return ((long) buffer.getInt() & 0xffffffffL);
     }
 
-    public static ByteBuffer putUnsignedInt(ByteBuffer buffer, long value) {
+    public static ByteBuffer putUnsigned32(ByteBuffer buffer, long value) {
         buffer.putInt((int) (value & 0xffffffffL));
         return buffer;
     }
@@ -125,7 +128,7 @@ public class Simple extends Base {
     // ----------------------------------------------------------------
 
     public static ArrayList<byte[]> getBytesArray(ByteBuffer buffer) {
-        int count = getUnsignedShort(buffer);
+        int count = getUnsigned16(buffer);
 
         ArrayList<byte[]> result = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -136,7 +139,7 @@ public class Simple extends Base {
     }
 
     public static ByteBuffer putBytesArray(ByteBuffer buffer, ArrayList<byte[]> value) {
-        putUnsignedShort(buffer, value.size());
+        putUnsigned16(buffer, value.size());
 
         for (int i = 0; i < value.size(); i++) {
             putBytes(buffer, value.get(i));
@@ -156,7 +159,7 @@ public class Simple extends Base {
 
     public static String getUtf8String(ByteBuffer buffer) {
         String result;
-        int length = getUnsignedShort(buffer);
+        int length = getUnsigned16(buffer);
         byte[] bytes = new byte[length];
         buffer.get(bytes, 0, length);
         try {
@@ -175,7 +178,7 @@ public class Simple extends Base {
         } catch (UnsupportedEncodingException ex) {
             throw new UnsupportedOperationException(ex);
         }
-        putUnsignedShort(buffer, bytes.length);
+        putUnsigned16(buffer, bytes.length);
         buffer.put(bytes);
         return buffer;
     }
@@ -183,14 +186,14 @@ public class Simple extends Base {
     // ----------------------------------------------------------------
 
     public static byte[] getBytes(ByteBuffer buffer) {
-        int length = (int)getUnsignedInt(buffer);
+        int length = (int)getUnsigned32(buffer);
         byte[] bytes = new byte[length];
         buffer.get(bytes, 0, length);
         return bytes;
     }
 
     public static ByteBuffer putBytes(ByteBuffer buffer, byte[] bytes) {
-        putUnsignedInt(buffer, bytes.length);
+        putUnsigned32(buffer, bytes.length);
         buffer.put(bytes, 0, bytes.length);
 
         return buffer;
@@ -214,7 +217,7 @@ public class Simple extends Base {
     }
 
     public ByteBuffer toBuffer(ByteBuffer buffer) {
-        return putUnsignedShort(buffer, type);
+        return putUnsigned16(buffer, type);
     }
 
     static public Simple fromBytes(byte[] bytes) {
@@ -227,7 +230,7 @@ public class Simple extends Base {
     }
 
     static public Simple fromBuffer(ByteBuffer buffer) {
-        int type = getUnsignedShort(buffer);
+        int type = getUnsigned16(buffer);
         buffer.position(0);
         switch (type) {
             case 0x1001:
@@ -242,5 +245,60 @@ public class Simple extends Base {
                 return new Entry(buffer);
         }
         return null;
+    }
+
+    public String getId() {
+        return String.valueOf(hashCode());
+    }
+
+    public int getType() {
+        return this.type;
+    }
+
+    public byte[] getTypeBytes() {
+        byte[] result = new  byte[2];
+        ByteBuffer.wrap(this.getData()).get(result, 0, 2);
+        return result;
+    }
+
+    public String getTypeString() {
+        return "Simple (" + byteArrayToHexString(this.getTypeBytes()) + ")";
+    }
+
+    public byte[] getData() {
+        if (data == null) {
+          ByteBuffer byteBuffer = toBuffer();
+          data = byteBuffer.array();
+        }
+        return data;
+    }
+
+    public String getDataString() {
+        if (data != null) {
+            return byteArrayToHexString(this.getData());
+        } else {
+            return "";
+        }
+    }
+
+    public static String byteArrayToHexString(byte[] array) {
+        StringBuffer hexString = new StringBuffer("0x");
+        for (byte b : array) {
+            int intVal = b & 0xff;
+            if (intVal < 0x10)
+                hexString.append("0");
+            hexString.append(Integer.toHexString(intVal));
+        }
+        return hexString.toString();
+    }
+
+    public static String byteArrayToHexString(ArrayList<byte[]> array) {
+        StringBuffer result = new StringBuffer();
+        for (int i = 0; i < array.size(); i++) {
+            result.append("\r\n[");
+            result.append(byteArrayToHexString(array.get(i)));
+            result.append("]\r\n");
+        }
+        return result.toString();
     }
 }

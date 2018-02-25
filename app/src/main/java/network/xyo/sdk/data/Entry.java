@@ -1,5 +1,7 @@
 package network.xyo.sdk.data;
 
+import android.os.SystemClock;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -15,7 +17,7 @@ public class Entry extends Simple {
     }
 
     public ArrayList<byte[]> payloads;
-    public long timestamp; // UINT32
+    public long epoch; // UINT32
     public BigInteger nonce; // UINT256
     public int difficulty; // UINT16
     public ArrayList<byte[]> p1keys; // 65
@@ -31,7 +33,8 @@ public class Entry extends Simple {
 
     public Entry() {
         this.type = 0x1005;
-        this.nonce = new BigInteger(32, new SecureRandom());
+        this.nonce = new BigInteger(255, new SecureRandom());
+        this.epoch = SystemClock.elapsedRealtime();
         this.payloads = new ArrayList<>();
         this.p1keys = new ArrayList<>();
         this.p2keys = new ArrayList<>();
@@ -48,11 +51,11 @@ public class Entry extends Simple {
 
         this.payloads = getBytesArray(buffer);
 
-        this.timestamp = getUnsignedInt(buffer);
+        this.epoch = getUnsigned32(buffer);
 
         this.nonce = getUnsigned256(buffer);
 
-        this.difficulty = getUnsignedShort(buffer);
+        this.difficulty = getUnsigned16(buffer);
 
         this.p1keys = getBytesArray(buffer);
 
@@ -103,11 +106,11 @@ public class Entry extends Simple {
 
         putBytesArray(buffer, this.payloads);
 
-        putUnsignedInt(buffer, this.timestamp);
+        putUnsigned32(buffer, this.epoch);
 
         putUnsigned256(buffer, this.nonce);
 
-        putUnsignedShort(buffer, this.difficulty);
+        putUnsigned16(buffer, this.difficulty);
 
         putBytesArray(buffer, this.p1keys);
 
@@ -126,5 +129,64 @@ public class Entry extends Simple {
         putBytesArray(buffer, this.tailSignatures);
 
         return buffer;
+    }
+
+    @Override
+    public String getTypeString() {
+        return "Entry (" + byteArrayToHexString(this.getTypeBytes()) + ")";
+    }
+
+    public String getEpochString() {
+        ByteBuffer bytes = ByteBuffer.allocate(4);
+        putUnsigned32(bytes, this.epoch);
+        return byteArrayToHexString(bytes.array());
+    }
+
+    public String getNonceString() {
+        ByteBuffer bytes = ByteBuffer.allocate(32);
+        putUnsigned256(bytes, this.nonce);
+        return byteArrayToHexString(bytes.array());
+    }
+
+    public String getDifficultyString() {
+        ByteBuffer bytes = ByteBuffer.allocate(2);
+        putUnsigned16(bytes, this.difficulty);
+        return byteArrayToHexString(bytes.array());
+    }
+
+    public String getPayloadsString() {
+        return byteArrayToHexString(payloads);
+    }
+
+    public String getP1KeysString() {
+        return byteArrayToHexString(p1keys);
+    }
+
+    public String getP2KeysString() {
+        return byteArrayToHexString(p2keys);
+    }
+
+    public String getP1SignaturesString() {
+        return byteArrayToHexString(p1signatures);
+    }
+
+    public String getP2SignaturesString() {
+        return byteArrayToHexString(p2signatures);
+    }
+
+    public String getHeadKeysString() {
+        return byteArrayToHexString(headKeys);
+    }
+
+    public String getTailKeysString() {
+        return byteArrayToHexString(tailKeys);
+    }
+
+    public String getHeadSignaturesString() {
+        return byteArrayToHexString(headSignatures);
+    }
+
+    public String getTailSignaturesString() {
+        return byteArrayToHexString(tailSignatures);
     }
 }

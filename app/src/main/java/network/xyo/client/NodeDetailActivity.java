@@ -1,16 +1,15 @@
 package network.xyo.client;
 
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.ActionBar;
 import android.view.MenuItem;
+
+import network.xyo.sdk.nodes.Node;
 
 /**
  * An activity representing a single Node detail screen. This
@@ -20,10 +19,14 @@ import android.view.MenuItem;
  */
 public class NodeDetailActivity extends AppCompatActivity {
 
+    private Node node;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_node_detail);
+        setContentView(R.layout.node_detail_activity);
+
+        node = Node.get(getIntent().getStringExtra(NodeDetailFragment.NODE_NAME));
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -53,8 +56,7 @@ public class NodeDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(NodeDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(NodeDetailFragment.ARG_ITEM_ID));
+            arguments.putString(NodeDetailFragment.NODE_NAME, node.getName());
             NodeDetailFragment fragment = new NodeDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()
