@@ -6,14 +6,12 @@ import android.os.SystemClock;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -37,7 +35,7 @@ import network.xyo.sdk.data.Simple;
 
 public class Node extends Base implements Entry.Signer {
 
-    private static int REQUEST_TIMEOUT = 10000;
+    private static int REQUEST_TIMEOUT = 100000;
 
     public interface Listener {
         void in(Node node, byte[] bytes);
@@ -148,9 +146,7 @@ public class Node extends Base implements Entry.Signer {
     }
 
     protected void addEntryToLedger(Entry entry) {
-        if (ledger.size() > 0) {
-            this.signHeadAndTail(entry);
-        }
+        this.signHeadAndTail(entry);
         this.ledger.add(entry);
         this._entryMap.put(String.valueOf(entry.hashCode()), entry);
         if (this.listener != null) {
@@ -169,12 +165,16 @@ public class Node extends Base implements Entry.Signer {
             }
             // if there are leading zeros, we have to pad
             if (modulus.length < 65) {
+                logError("Bad Modulus-A!");
                 byte[] paddedModulus = new byte[65];
                 int offset = 65 - modulus.length;
                 for (int j = 0; j < modulus.length; j++) {
                     paddedModulus[j + offset] = modulus[j];
                 }
                 modulus = paddedModulus;
+            }
+            if (modulus.length != 65) {
+                logError("Bad Modulus-B!");
             }
             result.add(modulus);
         }
@@ -203,34 +203,36 @@ public class Node extends Base implements Entry.Signer {
     }
 
     protected void spinKeys() {
+        for (int i = 0; i < _keyUses.size(); i++) {
+            _keyUses.set(i, _keyUses.get(i) + 1);
+            if (_keyUses.get(i) >= getKeyUses(i)) {
+                _keys.set(i, generateKeyPair());
+                _keyUses.set(i, 0);
+            }
+        }
+    }
+
+    private KeyPair generateKeyPair() {
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-            for (int i = 0; i < _keyUses.size(); i++) {
-                _keyUses.set(i, _keyUses.get(i) + 1);
-                if (_keyUses.get(i) >= getKeyUses(i)) {
-                    _keys.set(i, kpg.generateKeyPair());
-                    _keyUses.set(i, 0);
-                }
-            }
-        } catch (NoSuchAlgorithmException ex) {
+            kpg.initialize(512, new SecureRandom());
+            return kpg.generateKeyPair();
+        } catch (NoSuchAlgorithmException ex){
             logError("No RSA available");
         }
+        return null;
     }
 
     private void generateInitialKeys() {
         _keys = new ArrayList<>();
-        try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-            kpg.initialize(512, new SecureRandom());
-            _keys.add(kpg.generateKeyPair());
-            _keyUses.add(0);
-            _keys.add(kpg.generateKeyPair());
-            _keyUses.add(0);
-            _keys.add(kpg.generateKeyPair());
-            _keyUses.add(0);
-        } catch (NoSuchAlgorithmException ex) {
-            logError("No RSA available");
-        }
+        _keyUses = new ArrayList<>();
+
+        _keys.add(generateKeyPair());
+        _keyUses.add(0);
+        _keys.add(generateKeyPair());
+        _keyUses.add(0);
+        _keys.add(generateKeyPair());
+        _keyUses.add(0);
     }
 
     public ArrayList<byte[]> sign(byte[] payload) {

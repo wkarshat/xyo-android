@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.util.ArrayList;
 
 import network.xyo.sdk.data.Entry;
 
@@ -57,7 +58,24 @@ public class Sentinel extends Node {
 
     @Override
     protected boolean onEntry(Entry entry) {
+        entry.payloads = this.getPayloadsFromLedger(5);
         return true;
+    }
+
+    public ArrayList<byte[]> getPayloadsFromLedger(int maxEntries) {
+        ArrayList<byte[]> payloads = new ArrayList<>();
+
+        if (this.ledger.size() < maxEntries) {
+            maxEntries = this.ledger.size();
+        }
+
+        Entry[] entries = this.ledger.subList(0, maxEntries).toArray(new Entry[1]);
+
+        for (int i = 0; i < entries.length; i++) {
+            payloads.add(entries[i].toBytes());
+        }
+
+        return payloads;
     }
 
     public void pollLocation() {
