@@ -291,9 +291,9 @@ public class Node extends Base implements Entry.Signer {
                     Thread.sleep(1000);
                 }
             }
-            byte[] lengthBytes = new byte[4];
-            dis.read(lengthBytes, 0, 4);
-            int length = intFromBytes(lengthBytes);
+            //byte[] lengthBytes = new byte[4];
+            //dis.read(lengthBytes, 0, 4);
+            int length = dis.available(); //intFromBytes(lengthBytes);
             logInfo( "in: " + dis.available());
             if (length > 4) {
                 while (dis.available() < length) {
@@ -342,7 +342,7 @@ public class Node extends Base implements Entry.Signer {
         logInfo( "out: " + bytes.length);
         try {
             DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-            os.writeInt(bytes.length);
+            //os.writeInt(bytes.length);
             os.write(bytes, 0, bytes.length);
             totalOutCount += bytes.length;
             if (this.listener != null) {
